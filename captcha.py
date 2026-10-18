@@ -2,9 +2,9 @@ import os
 import httpx
 
 # 公开仓库里只能看到这个默认地址，真实地址通过 CAPTCHA_ENDPOINT 环境变量覆盖
-DEFAULT_ENDPOINT = os.getenv(
-    "CAPTCHA_ENDPOINT",
-    "http://127.0.0.1:9645/pass_nine"
+DEFAULT_ENDPOINT = (
+    os.getenv("CAPTCHA_ENDPOINT")
+    or "http://127.0.0.1:9645/pass_nine"
 )
 
 def captcha(gt: str, challenge: str, endpoint: str = DEFAULT_ENDPOINT):

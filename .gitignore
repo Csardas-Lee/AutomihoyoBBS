@@ -137,9 +137,10 @@ dmypy.json
 # vs
 .vs/
 
-# 避免上传配置文件
+# 避免上传本地账号配置
 config/*.json
-# config/*.yaml
+config/*.yaml
+!config/config.yaml.example
 config/*.ini
 
 # push配置

@@ -1,68 +1,82 @@
 # 🌸 米游社自动签到助手
 
-> ✅ 基于 [MihoyoBBSTools](https://github.com/Womsxd/MihoyoBBSTools) 的增强版，支持 **GitHub Actions 全自动签到**  
-> 🕒 每日凌晨自动执行，无需服务器，零成本挂机
+> 基于 [MihoyoBBSTools](https://github.com/Womsxd/MihoyoBBSTools) 的增强版，支持 **GitHub Actions 每日自动签到**。
 
 ---
 
-## 🚀 快速开始（GitHub Actions 部署）
+## 已配置内容
 
-### ① 本地镜像克隆（不带 Fork 标记）
+- 工作流文件：`.github/workflows/checkin.yml`
+- 自动运行时间：每天 **00:05（北京时间）**
+- 对应 UTC cron：`5 16 * * *`
+- 支持在 Actions 页面手动触发测试
+- 每月自动更新 `KEEP_ALIVE`，避免长期无提交导致定时工作流被 GitHub 停用
+
+---
+
+## 第一次使用：添加仓库 Secrets
+
+进入仓库 → `Settings` → `Secrets and variables` → `Actions` → **New repository secret**，依次添加：
+
+### 1. `COOKIE`
+
+粘贴米游社网页版完整 Cookie，至少应包含以下字段（顺序不限）：
+
+```text
+mid=xxx; stoken=v2_xxx=.CAE=; stuid=xxx; ltoken=xxx; ltuid=xxx; account_id=xxx; cookie_token=xxx
 ```
-git clone --mirror https://github.com/bcmdy/MihoyoBBSTools.git
-cd MihoyoBBSTools.git
+
+### 2. `STOKEN`
+
+只填 `stoken` 的值，例如：
+
+```text
+v2_xxx=.CAE=
 ```
 
----
+### 3. `CAPTCHA_ENDPOINT`
 
-### ② 上传增强文件在 GitHub 新建一个空白仓库（不要选 “import” 也不要点 Fork）。
+填写一个 **GitHub Actions 能够访问** 的打码服务地址，例如：
 
-假设新仓库地址为 https://github.com/你的用户名/空白仓库.git
-
----
-
-### ③ 一次性推上去
+```text
+https://你的打码服务地址/pass_nine
 ```
-git push --mirror https://github.com/你的用户名/空白仓库.git
-cd ..
-rm -rf MihoyoBBSTools.git
+
+注意：`http://127.0.0.1:9645/pass_nine` 只适用于本机或同一容器网络。GitHub 的云端 Runner 访问不到你电脑上的 `127.0.0.1`，需要部署到公网可访问的平台。
+
+验证码服务可参考：[kafuneri/captcha-tools](https://hub.docker.com/r/kafuneri/captcha-tools)。
+
+---
+
+## 测试运行
+
+1. 进入仓库 → `Actions` → 左侧选择 **Checkin**
+2. 点击右侧 **Run workflow** → **Run workflow**
+3. 打开本次运行记录，查看 `Execute check-in` 步骤日志
+
+签到成功时会看到类似“签到成功”的结果；失败时日志会提示 Cookie、Stoken 或验证码服务的问题。
+
+---
+
+## 本地运行（可选）
+
+```bash
+cp config/config.yaml.example config/config.yaml
 ```
-- **注意**：push时出现报错属于正常情况
+
+然后在 `config/config.yaml` 的 `account` 中填入 Cookie 和 Stoken，再执行：
+
+```bash
+python -m pip install -r requirements.txt
+python main.py
+```
+
+`config/config.yaml` 已被 `.gitignore` 排除，不会被提交。仓库中的 `config/config.yaml.example` 只保留空模板。
 
 ---
 
-### 四 配置 Cookie 和 SToken 及 CAPTCHA_ENDPOINT
-#### 🔑 添加 Cookie
-1. 进入仓库 → `Settings` → `Secrets and variables` → `Actions`
-2. 点击 **New repository secret**：
-   - **Name**：`COOKIE`
-   - **Value**：粘贴完整 Cookie（示例格式）：
-     ```
-     mid=xxx;stoken=v2_xxx=.CAE=;stuid=xxx;ltoken=xxx;ltuid=xxx;account_id=xxx;cookie_token=xxx
-     ```
+## 说明
 
-#### 🔐 添加 SToken
-- **Name**：`STOKEN`
-- **Value**：`v2_xxx=`（仅 `stoken` 值）
-
-#### 🔐 添加 CAPTCHA_ENDPOINT
-- **Name**：`CAPTCHA_ENDPOINT`
-- **Value**：http://127.0.0.1:9645/pass_nine
-- **说明**：```"http://127.0.0.1:9645/pass_nine"```为默认地址，docker部署即可，docker查看地址```https://hub.docker.com/r/kafuneri/captcha-tools```，自行部署，可以托管在免费的dokcer平台部署，比如koyeb、northflank、Claw Cloud Run
-
----
-
-## ✅ 测试运行
-1. 进入仓库 → `Actions` → `Checkin` → `Run workflow` → 点击 **Run workflow**
-2. 观察日志：
-   - 成功日志示例：`✅ 签到成功`
-   - 失败日志会提示错误原因（如 Cookie 失效）
-
----
-
-## ⏰ 定时说明
-- **默认时间**：每日 **00:05 (北京时间)** 自动运行
-- **修改方法**：编辑 `.github/workflows/Checkin.yml` 中的：
-  ```yaml
-  - cron: '5 16 * * *'  # UTC时间，北京时间+8
-  ```
+- GitHub Actions 的定时任务可能因平台负载延迟几分钟到几十分钟，这是正常现象。
+- 公开仓库若连续 60 天没有任何提交，GitHub 可能暂停定时工作流；`Keep Alive` 工作流会每月自动提交一次。
+- 如果 Cookie 或 Stoken 失效，请重新抓取并更新对应的仓库 Secret。
