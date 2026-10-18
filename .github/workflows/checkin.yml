@@ -38,6 +38,11 @@ jobs:
       - name: Prepare config
         run: cp config/config.yaml.example config/config.yaml
 
+      - name: Prepare Feishu push config
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: python prepare_push_config.py
+
       - name: Verify required secrets
         env:
           CHECK_COOKIE: ${{ secrets.COOKIE }}
@@ -55,3 +60,11 @@ jobs:
           CAPTCHA_ENDPOINT: ${{ secrets.CAPTCHA_ENDPOINT }}
           TZ: Asia/Shanghai
         run: python main.py
+
+      # 脚本异常退出时兜底提醒；正常的签到失败由 push.py 自行推送
+      - name: Notify Feishu on workflow failure
+        if: failure()
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python notify_feishu_failure.py

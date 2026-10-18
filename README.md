@@ -46,6 +46,22 @@ https://你的打码服务地址/pass_nine
 
 验证码服务可参考：[kafuneri/captcha-tools](https://hub.docker.com/r/kafuneri/captcha-tools)。
 
+### 4. `FEISHU_WEBHOOK`
+
+填写飞书群机器人的 Webhook 地址，例如：
+
+```text
+https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx
+```
+
+工作流会在每次签到后推送结果：
+
+- 签到成功：推送执行成功和签到详情
+- 签到失败、部分失败或触发验证码：推送对应错误信息
+- 工作流自身异常退出：额外推送一条带运行日志链接的失败提醒
+
+推送配置由工作流在运行时生成，Webhook 只保存在仓库 Secret 中，不会写入代码或 `config/push.ini` 提交。
+
 ---
 
 ## 测试运行
